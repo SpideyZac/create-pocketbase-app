@@ -6,95 +6,119 @@ const fs = require("fs");
 const extractZip = require("extract-zip");
 const path = require("path");
 const rimraf = require("rimraf");
+const https = require('follow-redirects').https;
 
-const recentVersion = "0.10.4";
+const request = https.request({
+    host: "github.com",
+    path: "/pocketbase/pocketbase/releases/latest",
+}, (res) => {
+    const recentVersion = res.responseUrl.split("/").slice(-1)[0].slice(1);
+    const downloadFolder = "temp/";
 
-const validDevices = [
-    "darwin_amd64",
-    "darwin_arm64",
-    "linux_amd64",
-    "linux_arm64",
-    "windows_amd64",
-    "windows_arm64",
-];
+    const blue = "\x1b[34m%s\x1b[0m";
+    const green = "\x1b[32m%s\x1b[0m";
+    const red = "\x1b[31m%s\x1b[0m";
 
-const validVersionDigits = [
-    ".",
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-]
+    const validDevices = [
+        "darwin_amd64",
+        "darwin_arm64",
+        "linux_amd64",
+        "linux_arm64",
+        "windows_amd64",
+        "windows_arm64",
+    ];
 
-if (args.h) {
-    console.log(
-`-v: Set the version of 'pocketbase.exe' to install (default: ${recentVersion})
--d: Set the device release to download (default: windows_amd64)`
-    );
-    process.exit(0);
-} else {
-    let device = "windows_amd64"
-    if (args.d) {
-        device = args.d;
-    }
+    const validVersionDigits = [
+        ".",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+    ]
 
-    if (!validDevices.includes(device)) {
-        console.log("\x1b[31m%s\x1b[0m", `That is not a valid device: ${validDevices}`);
-        process.exit(1);
-    }
+    if (args.h) {
+        console.log(
+    `-v: Set the version of 'pocketbase.exe' to install (default: ${recentVersion})
+    -d: Set the device release to download (default: windows_amd64)`
+        );
+        process.exit(0);
+    } else {
+        let device = "windows_amd64"
+        if (args.d) {
+            device = args.d;
+        }
 
-    let version = recentVersion;
-    if (args.v) {
-        version = '' + args.v;
-    }
-
-    for (c of version) {
-        if (!validVersionDigits.includes(c)) {
-            console.log("\x1b[31m%s\x1b[0m", `That is not a valid version`);
+        if (!validDevices.includes(device)) {
+            console.log(red, `That is not a valid device: ${validDevices}`);
             process.exit(1);
         }
-    }
 
-    const url = `http://github.com/pocketbase/pocketbase/releases/download/v${version}/pocketbase_${version}_${device}.zip`;
-    const file = `pocketbase_${version}_${device}.zip`
+        let version = recentVersion;
+        if (args.v) {
+            version = '' + args.v;
+        }
 
-    const downloader = new Downloader({
-        url: url,
-        directory: "./",
-        onProgress: function (percentage, chunk, remainingSize) {
-            console.clear()
-            console.log("\x1b[34m%s\x1b[0m", `%${percentage}`);
-        },
-    });
+        for (c of version) {
+            if (!validVersionDigits.includes(c)) {
+                console.log(red, `That is not a valid version`);
+                process.exit(1);
+            }
+        }
 
-    downloader.download()
-        .then(() => {
-            console.clear();
-            console.log("\x1b[32m%s\x1b[0m", "% 100")
-            console.log("\x1b[32m%s\x1b[0m", "Download finished... extracting PocketBase");
-            
-            extractZip(file, { dir: path.resolve("pocketbase") })
-                .then(() => {
-                    fs.unlinkSync(file)
+        const url = `http://github.com/pocketbase/pocketbase/releases/download/v${version}/pocketbase_${version}_${device}.zip`;
+        const file = `pocketbase_${version}_${device}.zip`
 
-                    console.log("\x1b[32m%s\x1b[0m", "Completed extraction... moving 'pocketbase.exe'");
-
-                    fs.rename("./pocketbase/pocketbase.exe", "./pocketbase.exe", () => {
-                        console.log("\x1b[32m%s\x1b[0m", "Done! Cleaning Up");
-                    });
-
-                    rimraf("./pocketbase", () => {
-                        console.log("\x1b[32m%s\x1b[0m", "Done");
-                    });
-                })
-        })
-        .catch(() => {
-            console.log("\x1b[31m%s\x1b[0m", `An error occured when attempting to download (maybe you passed an invalid version?)`);
+        const downloader = new Downloader({
+            url: url,
+            directory: "./",
+            onProgress: function (percentage, chunk, remainingSize) {
+                console.clear()
+                console.log(blue, `%${percentage}`);
+            },
         });
-}
+
+        downloader.download()
+            .then(() => {
+                console.clear();
+                console.log(green, "%100")
+                console.log(green, "Download finished... extracting PocketBase");
+                
+                extractZip(file, { dir: path.resolve(downloadFolder) })
+                    .then(() => {
+                        try {
+                            fs.unlinkSync(file);
+                            console.log(green, "Completed extraction... moving 'pocketbase' into your working directory");
+                        } catch (error) {
+                            console.log(red, "An error occured when deleting the ZIP file, continuing...");
+                            console.log(green, "Moving 'pocketbase' into your working directory");
+                        }
+
+                        try {
+                            if (fs.existsSync(`./${downloadFolder}/pocketbase.exe`)) {
+                                fs.renameSync(`./${downloadFolder}/pocketbase.exe`, "./pocketbase.exe");
+                            } else if (fs.existsSync(`./${downloadFolder}/pocketbase`)) {
+                                fs.renameSync(`./${downloadFolder}/pocketbase`, "./pocketbase");
+                            }
+
+                            console.log(green, "Done! Cleaning Up");
+
+                            rimraf("./temp", () => {
+                                console.log(green, "Done");
+                            });
+                        } catch (error) {
+                            console.log(red, "Failed to move 'pocketbase' into your working directory");
+                        }
+                    })
+            })
+            .catch(() => {
+                console.log(red, `An error occured when attempting to download (maybe you passed an invalid version?)`);
+            });
+    }
+});
+request.end();

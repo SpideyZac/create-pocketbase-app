@@ -1,6 +1,6 @@
 {
   "name": "create-pocketbase-app",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Automatically grab the PocketBase EXE File",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/SpideyZac/create-pocketbase-app#readme",
   "dependencies": {
     "extract-zip": "^2.0.1",
+    "follow-redirects": "^1.15.2",
     "nodejs-file-downloader": "^4.10.3",
     "rimraf": "^3.0.2",
     "yargs": "^17.6.2"
