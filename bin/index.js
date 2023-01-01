@@ -38,63 +38,63 @@ if (args.h) {
 -d: Set the device release to download (default: windows_amd64)`
     );
     process.exit(0);
-}
+} else {
+    let device = "windows_amd64"
+    if (args.d) {
+        device = args.d;
+    }
 
-let device = "windows_amd64"
-if (args.d) {
-    device = args.d;
-}
-
-if (!validDevices.includes(device)) {
-    console.log("\x1b[31m%s\x1b[0m", `That is not a valid device: ${validDevices}`);
-    process.exit(1);
-}
-
-let version = recentVersion;
-if (args.v) {
-    version = '' + args.v;
-}
-
-for (c of version) {
-    if (!validVersionDigits.includes(c)) {
-        console.log("\x1b[31m%s\x1b[0m", `That is not a valid version`);
+    if (!validDevices.includes(device)) {
+        console.log("\x1b[31m%s\x1b[0m", `That is not a valid device: ${validDevices}`);
         process.exit(1);
     }
-}
 
-const url = `http://github.com/pocketbase/pocketbase/releases/download/v${version}/pocketbase_${version}_${device}.zip`;
-const file = `pocketbase_${version}_${device}.zip`
+    let version = recentVersion;
+    if (args.v) {
+        version = '' + args.v;
+    }
 
-const downloader = new Downloader({
-    url: url,
-    directory: "./",
-    onProgress: function (percentage, chunk, remainingSize) {
-        console.clear()
-        console.log("\x1b[34m%s\x1b[0m", `%${percentage}`);
-    },
-});
+    for (c of version) {
+        if (!validVersionDigits.includes(c)) {
+            console.log("\x1b[31m%s\x1b[0m", `That is not a valid version`);
+            process.exit(1);
+        }
+    }
 
-downloader.download()
-    .then(() => {
-        console.clear();
-        console.log("\x1b[32m%s\x1b[0m", "% 100")
-        console.log("\x1b[32m%s\x1b[0m", "Download finished... extracting PocketBase");
-        
-        extractZip(file, { dir: path.resolve("pocketbase") })
-            .then(() => {
-                fs.unlinkSync(file)
+    const url = `http://github.com/pocketbase/pocketbase/releases/download/v${version}/pocketbase_${version}_${device}.zip`;
+    const file = `pocketbase_${version}_${device}.zip`
 
-                console.log("\x1b[32m%s\x1b[0m", "Completed extraction... moving 'pocketbase.exe'");
-
-                fs.rename("./pocketbase/pocketbase.exe", "./pocketbase.exe", () => {
-                    console.log("\x1b[32m%s\x1b[0m", "Done! Cleaning Up");
-                });
-
-                rimraf("./pocketbase", () => {
-                    console.log("\x1b[32m%s\x1b[0m", "Done");
-                });
-            })
-    })
-    .catch(() => {
-        console.log("\x1b[31m%s\x1b[0m", `An error occured when attempting to download (maybe you passed an invalid version?)`);
+    const downloader = new Downloader({
+        url: url,
+        directory: "./",
+        onProgress: function (percentage, chunk, remainingSize) {
+            console.clear()
+            console.log("\x1b[34m%s\x1b[0m", `%${percentage}`);
+        },
     });
+
+    downloader.download()
+        .then(() => {
+            console.clear();
+            console.log("\x1b[32m%s\x1b[0m", "% 100")
+            console.log("\x1b[32m%s\x1b[0m", "Download finished... extracting PocketBase");
+            
+            extractZip(file, { dir: path.resolve("pocketbase") })
+                .then(() => {
+                    fs.unlinkSync(file)
+
+                    console.log("\x1b[32m%s\x1b[0m", "Completed extraction... moving 'pocketbase.exe'");
+
+                    fs.rename("./pocketbase/pocketbase.exe", "./pocketbase.exe", () => {
+                        console.log("\x1b[32m%s\x1b[0m", "Done! Cleaning Up");
+                    });
+
+                    rimraf("./pocketbase", () => {
+                        console.log("\x1b[32m%s\x1b[0m", "Done");
+                    });
+                })
+        })
+        .catch(() => {
+            console.log("\x1b[31m%s\x1b[0m", `An error occured when attempting to download (maybe you passed an invalid version?)`);
+        });
+}

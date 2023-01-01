@@ -1,6 +1,6 @@
 {
   "name": "create-pocketbase-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automatically grab the PocketBase EXE File",
   "main": "index.js",
   "scripts": {
