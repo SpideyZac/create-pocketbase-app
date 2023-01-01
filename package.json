@@ -1,0 +1,33 @@
+{
+  "name": "create-pocketbase-app",
+  "version": "1.0.0",
+  "description": "Automatically grab the PocketBase EXE File",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "create-pocketbase-app": "bin/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpideyZac/create-pocketbase-app.git"
+  },
+  "keywords": [
+    "pocketbase",
+    "create",
+    "create-pocketbase-app"
+  ],
+  "author": "SpideyZac#8044",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SpideyZac/create-pocketbase-app/issues"
+  },
+  "homepage": "https://github.com/SpideyZac/create-pocketbase-app#readme",
+  "dependencies": {
+    "extract-zip": "^2.0.1",
+    "nodejs-file-downloader": "^4.10.3",
+    "rimraf": "^3.0.2",
+    "yargs": "^17.6.2"
+  }
+}
